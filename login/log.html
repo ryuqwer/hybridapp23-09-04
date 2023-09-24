@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Adjusted CSS for the first box to increase height */
+        .first {
+            border: 1px solid red;
+            width: 50%;
+            height: 100px; /* Initial height */
+            box-sizing: border-box;
+            padding: 10px;
+            position: relative; /* Added position relative */
+            transition: height 0.5s; /* Added transition for smooth height change */
+        }
+
+        .first.active {
+            height: 500px; /* Adjusted height when active */
+        }
+
+        .first textarea {
+            width: calc(100% - 20px); /* Adjust for padding */
+            height: 50%; /* Adjust the height as needed */
+            box-sizing: border-box;
+        }
+
+        .first button {
+            width: 80px;
+            position: absolute; /* Position the button */
+            bottom: 10px; /* Adjust the position as needed */
+            right: 10px; /* Adjust the position as needed */
+        }
+
+        /* CSS for the content inside the first box */
+        .first #infoContainer {
+            display: none;
+        }
+
+        .first.active #infoContainer {
+            display: block;
+        }
+
+        .first.active #infoContainer p,
+        .first.active #infoContainer img {
+            width: 30%;
+            box-sizing: border-box;
+        }
+
+        /* Adjusted CSS for the second box */
+        .second {
+            border: 1px solid green;
+            width: 15%;
+            height: 300px;
+            float: left;
+            box-sizing: border-box;
+            margin-right: 10px; /* Added margin for spacing */
+        }
+
+        /* Adjusted CSS for the third box */
+        .third {
+            border: 1px solid blue;
+            width: 34%;
+            height: 300px;
+            float: left;
+            box-sizing: border-box;
+        }
+    </style>
+    <title>Rectangle Boxes</title>
+</head>
+<body>
+    <div class="first" id="firstBox">
+        <textarea id="username" placeholder="아이디를 입력하세요..."></textarea>
+        <button onclick="toggleContent()">로그인</button>
+        <div id="infoContainer" class="content">
+            <p id="displayText"></p>
+            <img id="displayImage" src="yuhan.jpg" alt="Displayed Image">
+        </div>
+    </div>
+    <div class="second">
+        <button onclick="addTextToThird('저는 류웅선입니다.')">버튼 1</button>
+        <button onclick="addTextToThird('과제 적으면 좋겠어요.')">버튼 2</button>
+        <button onclick="addTextToThird('3은 못하겠어요.')">버튼 3</button>
+    </div>
+    <div class="third" id="thirdBox">
+        
+    </div>
+    <script>
+        function toggleContent() {
+            var firstBox = document.getElementById('firstBox');
+            var infoContainer = document.getElementById('infoContainer');
+            var username = document.getElementById('username').value;
+            var displayText = document.getElementById('displayText');
+            var displayImage = document.getElementById('displayImage');
+            var loginButton = document.querySelector('.first button');
+
+            if (firstBox.classList.contains('active')) {
+                infoContainer.style.display = 'none';
+                firstBox.classList.remove('active');
+                loginButton.textContent = '로그인';
+            } else {
+                if (username !== '') {
+                    displayText.textContent = '어서오세요, ' + username + '님!';
+                    infoContainer.style.display = 'block';
+                    firstBox.classList.add('active');
+                    loginButton.textContent = '로그아웃';
+                }
+            }
+        }
+
+        function addTextToThird(text) {
+            var thirdBox = document.getElementById('thirdBox');
+            var newText = document.createElement('p');
+            newText.textContent = text;
+            thirdBox.appendChild(newText);
+        }
+    </script>
+</body>
+</html>
