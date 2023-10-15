@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API 호출 예제</title>
+</head>
+<body>
+  <button onclick="fetchData()">데이터 받아오기</button>
+  <p id="response"></p>
+
+  <script>
+    function fetchData() {
+      const responseElement = document.getElementById('response');
+
+      fetch('http://localhost:5000/hi')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.text();
+        })
+        .then(data => {
+          responseElement.innerText = data;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          responseElement.innerText = '데이터를 가져오는 중에 오류가 발생했습니다.';
+        });
+    }
+  </script>
+</body>
+</html>
