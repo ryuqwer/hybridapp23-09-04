@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>뱀 게임와 회전 도형</title>
+    <style>
+        #game-container {
+            position: relative;
+        }
+
+        #game-board {
+            background-color: rgb(238, 238, 238);
+        }
+
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            text-align: left;
+            font-size: 24px;
+        }
+
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-board" width="2400" height="1200"></canvas>
+        <div id="info"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('game-board');
+        const ctx = canvas.getContext('2d');
+        const segmentRadius = 10;
+        const segmentSpacing = 10;
+        let snakeSegments = [
+            { id: 1, x: 100, y: 100 },
+            { id: 2, x: 90, y: 100 },
+            { id: 3, x: 80, y: 100 }
+        ];
+        let targetX, targetY;
+        let isClicking = false;
+        let startTime = Date.now();
+        let appleX, appleY;
+        let appleRadius = 10;
+        let snakeLength = 3;
+
+        // 회전하는 장애물을 추가
+        const obstacle = {
+            x: canvas.width + 50,
+            y: 100,
+            size: 50,
+            angle: 0,
+            speed: 2,
+            type: null
+        };
+
+        // 초기 스피드와 시간 간격 설정
+        let obstacleSpeed = 2;
+        const speedIncreaseInterval = 10000; // 10초
+
+        // 스피드를 높이는 함수
+        function increaseObstacleSpeed() {
+            obstacleSpeed += 1; // 스피드를 0.2씩 증가
+        }
+
+        // 10초마다 스피드를 높이는 타이머
+        const speedIncreaseTimer = setInterval(increaseObstacleSpeed, speedIncreaseInterval);
+
+        // 도형 타입 정의
+        const OBSTACLE_TYPES = {
+            RECTANGLE: 'rectangle',
+            TRIANGLE: 'triangle',
+            CIRCLE: 'circle'
+        };
+
+        // 랜덤으로 도형 선택
+        function getRandomObstacleType() {
+            const types = Object.values(OBSTACLE_TYPES);
+            const randomIndex = Math.floor(Math.random() * types.length);
+            return types[randomIndex];
+        }
+
+        function drawSnake() {
+            for (const segment of snakeSegments) {
+                ctx.fillStyle = '#00f';
+                ctx.beginPath();
+                ctx.arc(segment.x, segment.y, segmentRadius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawApple() {
+            ctx.fillStyle = '#f00';
+            ctx.beginPath();
+            ctx.arc(appleX, appleY, appleRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawObstacle() {
+            ctx.fillStyle = 'green';
+            ctx.save();
+            ctx.translate(obstacle.x, obstacle.y);
+
+            switch (obstacle.type) {
+                case OBSTACLE_TYPES.RECTANGLE:
+                    ctx.rotate(obstacle.angle);
+                    ctx.fillRect(-obstacle.size / 2, -obstacle.size / 2, obstacle.size, obstacle.size);
+                    break;
+                case OBSTACLE_TYPES.TRIANGLE:
+                    ctx.rotate(obstacle.angle);
+                    ctx.beginPath();
+                    ctx.moveTo(0, -obstacle.size / 2);
+                    ctx.lineTo(-obstacle.size / 2, obstacle.size / 2);
+                    ctx.lineTo(obstacle.size / 2, obstacle.size / 2);
+                    ctx.fill();
+                    break;
+                case OBSTACLE_TYPES.CIRCLE:
+                    ctx.beginPath();
+                    ctx.arc(0, 0, obstacle.size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+            }
+
+            ctx.restore();
+        }
+
+        function generateApple() {
+            const minX = appleRadius;
+            const maxX = canvas.width - appleRadius;
+            const minY = appleRadius;
+            const maxY = canvas.height - appleRadius;
+            appleX = Math.floor(Math.random() * (maxX - minX + 1)) + minX;
+            appleY = Math.floor(Math.random() * (maxY - minY + 1)) + minY;
+        }
+
+        function generateObstacle() {
+            const randomDirection = Math.floor(Math.random() * 4);
+            obstacle.type = getRandomObstacleType();
+
+            switch (randomDirection) {
+                case 0:
+                    obstacle.x = Math.floor(Math.random() * canvas.width);
+                    obstacle.y = -obstacle.size / 2;
+                    obstacle.angle = 0;
+                    break;
+                case 1:
+                    obstacle.x = Math.floor(Math.random() * canvas.width);
+                    obstacle.y = canvas.height + obstacle.size / 2;
+                    obstacle.angle = Math.PI;
+                    break;
+                case 2:
+                    obstacle.x = -obstacle.size / 2;
+                    obstacle.y = Math.floor(Math.random() * canvas.height);
+                    obstacle.angle = -Math.PI / 2;
+                    break;
+                case 3:
+                    obstacle.x = canvas.width + obstacle.size / 2;
+                    obstacle.y = Math.floor(Math.random() * canvas.height);
+                    obstacle.angle = Math.PI / 2;
+                    break;
+            }
+
+            obstacle.speed = obstacleSpeed;
+        }
+
+        function update(event) {
+            targetX = event.clientX - canvas.getBoundingClientRect().left;
+            targetY = event.clientY - canvas.getBoundingClientRect().top;
+        }
+
+        function handleMouseDown() {
+            isClicking = true;
+        }
+
+        function handleMouseUp() {
+            isClicking = false;
+        }
+
+        canvas.addEventListener('mousemove', update);
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mouseup', handleMouseUp);
+
+        function updateInfo() {
+            const currentTime = Date.now();
+            const elapsedTime = Math.floor((currentTime - startTime) / 1000);
+            document.getElementById('info').textContent = `시간: ${elapsedTime}초 / 뱀의 길이: ${snakeLength}`;
+        }
+
+        function checkCollision() {
+    const dx = appleX - snakeSegments[0].x;
+    const dy = appleY - snakeSegments[0].y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < segmentRadius + appleRadius) {
+        snakeLength++;
+        generateApple();
+    }
+
+    const obstacleCenterX = obstacle.x;
+    const obstacleCenterY = obstacle.y;
+    const obstacleSize = obstacle.size / 2;
+    const snakeHeadX = snakeSegments[0].x;
+    const snakeHeadY = snakeSegments[0].y;
+
+    // 뱀 머리가 장애물과 충돌하는 경우
+    if (
+        snakeHeadX + segmentRadius > obstacleCenterX - obstacleSize &&
+        snakeHeadX - segmentRadius < obstacleCenterX + obstacleSize &&
+        snakeHeadY + segmentRadius > obstacleCenterY - obstacleSize &&
+        snakeHeadY - segmentRadius < obstacleCenterY + obstacleSize
+    ) {
+        snakeSegments = [];
+        snakeLength = 0;
+        stopGame(); // 게임 종료
+    }
+
+    // 뱀의 몸통과 장애물 충돌 검사
+    for (let i = 1; i < snakeSegments.length; i++) {
+        if (
+            snakeSegments[i].x + segmentRadius > obstacleCenterX - obstacleSize &&
+            snakeSegments[i].x - segmentRadius < obstacleCenterX + obstacleSize &&
+            snakeSegments[i].y + segmentRadius > obstacleCenterY - obstacleSize &&
+            snakeSegments[i].y - segmentRadius < obstacleCenterY + obstacleSize
+        ) {
+            snakeSegments = [];
+            snakeLength = 0;
+            stopGame(); // 게임 종료
+        }
+    }
+}
+
+        function moveSnake() {
+            for (let i = snakeSegments.length - 1; i > 0; i--) {
+                const dx = snakeSegments[i - 1].x - snakeSegments[i].x;
+                const dy = snakeSegments[i - 1].y - snakeSegments[i].y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > segmentSpacing) {
+                    const ratio = segmentSpacing / distance;
+                    snakeSegments[i].x = snakeSegments[i - 1].x - dx * ratio;
+                    snakeSegments[i].y = snakeSegments[i - 1].y - dy * ratio;
+                }
+            }
+
+            const dx = targetX - snakeSegments[0].x;
+            const dy = targetY - snakeSegments[0].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 1) {
+                const speed = isClicking ? 8 : 4;
+                snakeSegments[0].x += (dx / distance) * speed;
+                snakeSegments[0].y += (dy / distance) * speed;
+            }
+
+            while (snakeSegments.length < snakeLength) {
+                const lastSegment = snakeSegments[snakeSegments.length - 1];
+                snakeSegments.push({
+                    id: snakeSegments.length + 1,
+                    x: lastSegment.x,
+                    y: lastSegment.y
+                });
+            }
+        }
+
+        // 회전 각도를 업데이트하는 함수 추가
+        function rotateObstacle() {
+            obstacle.angle += Math.PI / 90;
+            if (obstacle.angle >= Math.PI * 2) {
+                obstacle.angle -= Math.PI * 2;
+            }
+        }
+
+        function moveObstacle() {
+            switch (obstacle.angle) {
+                case 0:
+                    obstacle.y += obstacle.speed;
+                    break;
+                case Math.PI:
+                    obstacle.y -= obstacle.speed;
+                    break;
+                case -Math.PI / 2:
+                    obstacle.x += obstacle.speed;
+                    break;
+                case Math.PI / 2:
+                    obstacle.x -= obstacle.speed;
+                    break;
+            }
+
+            if (obstacle.x < -obstacle.size / 2 || obstacle.x > canvas.width + obstacle.size / 2 || obstacle.y < -obstacle.size / 2 || obstacle.y > canvas.height + obstacle.size / 2) {
+                generateObstacle();
+            }
+        }
+
+        function gameLoop() {
+            checkCollision();
+            moveSnake();
+            moveObstacle();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawSnake();
+            drawApple();
+            drawObstacle();
+            updateInfo();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 10초마다 스피드 업데이트 타이머가 해제되도록
+        function stopGame() {
+            clearInterval(speedIncreaseTimer);
+        }
+
+        generateApple();
+        generateObstacle();
+        gameLoop();
+    </script>
+</body>
+</html>
