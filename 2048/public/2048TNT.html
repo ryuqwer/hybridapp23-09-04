@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #faf8ef;
+    }
+
+    .game-container {
+      display: grid;
+      grid-template-columns: repeat(4, 150px);
+      gap: 10px;
+      background-color: #bbada0;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .cell {
+      width: 150px;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      background-color: #cdc1b4;
+      border-radius: 5px;
+    }
+
+    #score {
+      text-align: center;
+      font-size: 24px;
+      margin-top: 20px;
+    }
+  </style>
+  <title>2048 게임</title>
+</head>
+<body>
+    <div id="score">Score: <span id="current-score">0</span></div>
+    <div id="high-score">High Score: <span id="high-score-value">0</span></div>
+    <button id="restart-button" onclick="restartGame()">재시작</button>
+    <div class="game-container" id="game-container"></div>
+
+  </div>
+<script src="TNT.js"></script>
+</body>
+</html>
